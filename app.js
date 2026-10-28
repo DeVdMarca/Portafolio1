@@ -5,6 +5,9 @@ let mouseX = 0, mouseY = 0; // Guardarán la posición del cursor del usuario
 // Variables para suavizar el movimiento del mouse (Efecto inercia)
 let targetX = 0, targetY = 0;
 
+// Variable global para conectar el volumen simulado de la voz con Three.js
+let volumenActual = 0;
+
 const windowHalfX = window.innerWidth / 2;
 const windowHalfY = window.innerHeight / 2;
 
@@ -26,6 +29,9 @@ function init() {
     window.addEventListener('resize', onWindowResize);
     // Captura el movimiento del mouse en toda la pantalla
     document.addEventListener('mousemove', onDocumentMouseMove);
+
+    // Inicializar el sistema de síntesis de voz
+    initVoiceSynthesis();
 
     animate();
 }
@@ -53,7 +59,7 @@ function createBrainParticles() {
     scene.add(particleSystem);
 }
 
-// NUEVA FUNCIÓN: Registra las coordenadas del cursor y las normaliza
+// REGISTRA LAS COORDENADAS DEL CURSOR Y LAS NORMALIZA
 function onDocumentMouseMove(event) {
     mouseX = (event.clientX - windowHalfX) / 100;
     mouseY = (event.clientY - windowHalfY) / 100;
@@ -65,8 +71,7 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-// MODIFICACIÓN EN EL BUCLE DE ANIMACIÓN:
-// Variable global nueva para saber en qué espacio estamos parados (core, sobre-mi, proyectos, stack)
+// BUCLE DE ANIMACIÓN
 let espacioActual = 'core'; 
 
 function animate() {
@@ -80,47 +85,54 @@ function animate() {
         const esFallo = particleSystem.material.color.getHex() === 0xff3333;
         const multiplicadorVelocidad = esFallo ? 6 : 1;
 
+        // Resetear tamaño base si no está en modo fallo
+        if (!esFallo && espacioActual !== 'analizar-operador') {
+            particleSystem.material.size = 0.04;
+        }
+
         // --- COMPORTAMIENTO SEGÚN EL ESPACIO INTERACTIVO ---
         if (espacioActual === 'core') {
-            // El estado inicial que ya tienes: rotación suave y calma
             particleSystem.rotation.y += 0.0008 * multiplicadorVelocidad;
             particleSystem.rotation.x += 0.0003 * multiplicadorVelocidad;
             
-            // Reacción sutil al mouse
             particleSystem.rotation.y += targetX * 0.02;
             particleSystem.rotation.x += targetY * 0.02;
 
         } else if (espacioActual === 'sobre-mi') {
-            // DISEÑO 1: Órbita Elíptica Neutra (Se mueven como un péndulo de energía)
             particleSystem.rotation.y += 0.002;
-            // Hacemos que las partículas respiren (vayan de atrás hacia adelante en el eje Z)
             particleSystem.position.z = Math.sin(Date.now() * 0.001) * 0.5;
 
         } else if (espacioActual === 'proyectos') {
-            // DISEÑO 2: Vórtice / Agujero de gusano acelerado
-            // Forzamos una rotación veloz sobre un solo eje para simular un túnel de datos
             particleSystem.rotation.z += 0.005;
             particleSystem.rotation.y += 0.001;
             
-            // El mouse altera el centro del túnel bruscamente
             particleSystem.position.x = targetX * 0.5;
             particleSystem.position.y = -targetY * 0.5;
 
         } else if (espacioActual === 'stack') {
-            // DISEÑO 3: Matriz digital / Caída libre
-            // Inclinamos el sistema de partículas y lo hacemos descender en el eje Y
-            particleSystem.rotation.x = 1.5; // Lo acostamos horizontalmente
-            particleSystem.position.y -= 0.01; // Las partículas "caen"
+            particleSystem.rotation.x = 1.5; 
+            particleSystem.position.y -= 0.01; 
             
-            // Si caen demasiado abajo, las reiniciamos arriba para crear un bucle infinito
             if (particleSystem.position.y < -2) {
                 particleSystem.position.y = 2;
             }
+        } else if (espacioActual === 'analizar-operador') {
+            // REACCIÓN 3D DE AUDIO: El motor responde al habla de la IA
+            particleSystem.rotation.y += (0.004 + volumenActual * 0.05) * multiplicadorVelocidad;
+            particleSystem.rotation.z += 0.001 * multiplicadorVelocidad;
+            
+            // Agitación caótica controlada basada en las frecuencias de audio
+            particleSystem.position.x = (Math.cos(Date.now() * 0.002) * 0.2) + (Math.random() - 0.5) * volumenActual * 0.1;
+            particleSystem.position.y = (Math.sin(Date.now() * 0.002) * 0.2) + (Math.random() - 0.5) * volumenActual * 0.1;
+            
+            // Las partículas alteran su tamaño físicamente al ritmo del volumen
+            particleSystem.material.size = 0.04 + (volumenActual * 0.06);
         }
     }
 
-    renderer.render(scene, camara || camara); // Compatible con tu variable de cámara
+    renderer.render(scene, camara); 
 }
+
 // --- LÓGICA DE NAVEGACIÓN CON EFECTO FALLO DEL SISTEMA ---
 function activarNodo(nombreNodo) {
     console.log("CRITICAL ALERT: Alterando secuencia de núcleo para: " + nombreNodo.toUpperCase());
@@ -130,7 +142,6 @@ function activarNodo(nombreNodo) {
 
     bodyElement.classList.add('sistema-fallo');
 
-    // Sobrecarga destructiva momentánea (Rojo y gigante)
     if (particleSystem) {
         particleSystem.material.color.setHex(0xff3333); 
         particleSystem.material.size = 0.08;           
@@ -142,34 +153,35 @@ function activarNodo(nombreNodo) {
         coreMenu.style.pointerEvents = 'none';
     }
 
-    // Actualizamos el estado del espacio antes de entrar
     espacioActual = nombreNodo;
 
     const panelObjetivo = document.getElementById(
         nombreNodo === 'sobre-mi' ? 'nodo-sobre-mi' : 
-        nombreNodo === 'proyectos' ? 'nodo-proyectos' : 'nodo-stack'
+        nombreNodo === 'proyectos' ? 'nodo-proyectos' : 
+        nombreNodo === 'analizar-operador' ? 'nodo-analizar-operador' : 'nodo-stack'
     );
     
     setTimeout(() => {
         bodyElement.classList.remove('sistema-fallo');
         
-        // --- AQUÍ RECONFIGURAMOS EL DISEÑO PROPIO DE CADA CARPETA ---
         if (particleSystem) {
             if (espacioActual === 'sobre-mi') {
-                particleSystem.material.color.setHex(0x00ff99); // Verde Neón Orgánico (Red Neuronal)
+                particleSystem.material.color.setHex(0x00ff99); 
                 particleSystem.material.size = 0.05;
             } else if (espacioActual === 'proyectos') {
-                particleSystem.material.color.setHex(0xff00ff); // Magenta/Púrpura Eléctrico (Vórtice)
+                particleSystem.material.color.setHex(0xff00ff); 
                 particleSystem.material.size = 0.06;
             } else if (espacioActual === 'stack') {
-                particleSystem.material.color.setHex(0x33ff33); // Verde Hacker Clásico de Matriz
+                particleSystem.material.color.setHex(0x33ff33); 
                 particleSystem.material.size = 0.03;
+            } else if (espacioActual === 'analizar-operador') {
+                particleSystem.material.color.setHex(0x00f3ff); 
+                particleSystem.material.size = 0.04;
             }
         }
 
-        // Reseteamos posiciones físicas para que la animación empiece limpia
         particleSystem.position.set(0, 0, 0);
-        if(espacioActual !== 'stack') particleSystem.rotation.set(0,0,0);
+        if(espacioActual !== 'stack' && espacioActual !== 'analizar-operador') particleSystem.rotation.set(0,0,0);
 
         if (panelObjetivo) {
             panelObjetivo.classList.add('active');
@@ -181,6 +193,10 @@ function activarNodo(nombreNodo) {
 function regresarAlCore() {
     console.log("Restaurando estabilidad del núcleo central...");
     
+    // Detener de inmediato la síntesis de audio si el usuario sale del panel analítico
+    window.speechSynthesis.cancel();
+    resetEstilosVoz();
+
     const bodyElement = document.body;
     bodyElement.classList.add('sistema-fallo');
 
@@ -190,18 +206,15 @@ function regresarAlCore() {
     });
 
     const coreMenu = document.querySelector('.hud-container');
-    
-    // Devolvemos el estado al menú principal
     espacioActual = 'core';
 
     setTimeout(() => {
         bodyElement.classList.remove('sistema-fallo');
 
-        // Restauramos el universo base (Azul cian original)
         if (particleSystem) {
             particleSystem.material.color.setHex(0x00f3ff); 
             particleSystem.material.size = 0.04;           
-            particleSystem.position.set(0, 0, 0); // Regresa al centro
+            particleSystem.position.set(0, 0, 0); 
             particleSystem.rotation.set(0, 0, 0);
         }
 
@@ -213,36 +226,105 @@ function regresarAlCore() {
     }, 300);
 }
 
-
-window.onload = () => {
-    init();
-};
-
 function iniciarEfectoEscritura(panel) {
-    // Buscamos todos los elementos con la clase .typing-text DENTRO del panel que se acaba de abrir
     const elementosTexto = panel.querySelectorAll('.typing-text');
     
     elementosTexto.forEach(elemento => {
-        // Recuperamos el texto original guardado en el atributo data-text
         const textoCompleto = elemento.getAttribute('data-text');
-        
-        // Vaciamos el contenedor para empezar la simulación desde cero
         elemento.textContent = '';
-        
         let indiceLetra = 0;
-        elemento.style.borderRight = '2px solid #00f3ff'; // Agrega un cursor parpadeante de terminal
+        elemento.style.borderRight = '2px solid #00f3ff'; 
         
-        // Creamos un bucle de tiempo (Intervalo) para escribir letra por letra
         const intervaloEscritura = setInterval(() => {
             if (indiceLetra < textoCompleto.length) {
-                // Añadimos el siguiente carácter al texto visible
                 elemento.textContent += textoCompleto.charAt(indiceLetra);
                 indiceLetra++;
             } else {
-                // Cuando termina de escribir todo el texto, limpia el bucle y remueve el cursor
                 clearInterval(intervaloEscritura);
                 elemento.style.borderRight = 'none';
             }
-        }, 25); // Velocidad: Escribe una letra cada 25 milisegundos (ultra rápido y futurista)
+        }, 25); 
     });
 }
+
+// --- SUB-SISTEMA INTEGRADO: SÍNTESIS DE VOZ DE IA CON ANALIZADOR DE FRECUENCIAS REACTIVO ---
+let renderLoopVoz = null;
+
+function initVoiceSynthesis() {
+    const btnHablar = document.getElementById('btn-hablar-ia');
+    const textoElemento = document.getElementById('texto-lectura-ia');
+    const contenedorReactivo = document.getElementById('scanner-box-reactive');
+
+    if (!btnHablar || !textoElemento) return;
+
+    btnHablar.addEventListener('click', () => {
+        const mensajeTexto = textoElemento.getAttribute('data-text');
+        
+        // Limpieza absoluta de instancias y animaciones activas previas
+        window.speechSynthesis.cancel();
+        if (renderLoopVoz) cancelAnimationFrame(renderLoopVoz);
+        resetEstilosVoz();
+
+        const lectura = new SpeechSynthesisUtterance(mensajeTexto);
+        const voces = window.speechSynthesis.getVoices();
+        const vozEspañol = voces.find(voz => voz.lang.startsWith('es'));
+        if (vozEspañol) lectura.voice = vozEspañol;
+lectura.rate = 1.1;
+lectura.pitch = 1.2;
+lectura.volume = 1.0;
+lectura.onstart = () => {
+btnHablar.style.borderColor = "#ff00ff";
+btnHablar.querySelector('span').textContent = "IA VOCALIZANDO...";
+if (contenedorReactivo) contenedorReactivo.classList.add('vibrating');
+// Inicializar el analizador de frecuencias
+iniciarAnalizadorFrecuencias();
+};
+lectura.onend = () => {
+btnHablar.style.borderColor = "#00f3ff";
+btnHablar.querySelector('span').textContent = "EJECUTAR INTERFAZ DE VOZ";
+if (contenedorReactivo) contenedorReactivo.classList.remove('vibrating');
+if (renderLoopVoz) cancelAnimationFrame(renderLoopVoz);
+resetEstilosVoz();
+};
+window.speechSynthesis.speak(lectura);
+});
+}
+function iniciarAnalizadorFrecuencias() {
+const barras = document.querySelectorAll('.voice-wave-bar');
+const contenedor = document.getElementById('scanner-box-reactive');
+function procesarOnda() {
+if (window.speechSynthesis.speaking) {
+// Simulación algorítmica de espectro de audio de alta precisión
+volumenActual = Math.abs(Math.sin(Date.now() * 0.015)) * 0.4 + Math.random() * 0.4;
+// Simular pausas naturales entre fonemas
+if (Math.random() > 0.88) volumenActual = 0;
+} else {
+volumenActual = 0;
+}
+// Pasar variable de volumen a la interfaz CSS
+if (contenedor) contenedor.style.setProperty('--volume', volumenActual);
+barras.forEach(barra => {
+barra.style.setProperty('--volume', volumenActual * (0.6 + Math.random() * 0.4));
+});
+if (window.speechSynthesis.speaking) {
+renderLoopVoz = requestAnimationFrame(procesarOnda);
+} else {
+resetEstilosVoz();
+}
+}
+procesarOnda();
+}
+function resetEstilosVoz() {
+volumenActual = 0;
+const barras = document.querySelectorAll('.voice-wave-bar');
+const contenedor = document.getElementById('scanner-box-reactive');
+if (contenedor) contenedor.style.setProperty('--volume', '0');
+barras.forEach(barra => barra.style.setProperty('--volume', '0'));
+}
+// Disparador asíncrono para asegurar la precarga de diccionarios fonéticos en Chromium
+if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+speechSynthesis.onvoiceschanged = initVoiceSynthesis;
+}
+window.onload = () => {
+init();
+};

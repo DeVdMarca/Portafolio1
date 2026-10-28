@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>David | IA Portafolio core</title>
     <link rel="stylesheet" href="./style.css">
-    
 </head>
 <body>
    
@@ -39,38 +38,42 @@
                         <span class="btn-glitch">/CORE_STACK</span>
                         <span class="btn-status">READY</span>
                     </button>
+
+                    <!-- NUEVO BOTÓN: Analizar operador por comandos de voz -->
+                    <button class="hud-btn" onclick="activarNodo('analizar-operador')">
+                        <span class="btn-glitch">/ANALIZAR_OPERADOR</span>
+                        <span class="btn-status">READY</span>
+                    </button>
                 </nav>
             </div>
         </div>
     </main>
 
     <!-- CONTENEDORES DE LOS NODOS DE MEMORIA (SUB-ESPACIOS OCULTOS) -->
-    <!-- CONTENEDORES DE LOS NODOS DE MEMORIA (SUB-ESPACIOS) -->
-<section id="nodo-sobre-mi" class="sub-space-panel">
-    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
-    <div class="space-content">
-        <h2>NODE // SOBRE_MÍ</h2>
-        <!-- Añadimos la clase typing-text al párrafo que queremos animar -->
-        <p class="typing-text" data-text="Soy un desarrollador de software enfocado en resolver problemas complejos mediante código limpio y estructurado. Me apasiona explorar nuevas tecnologías y construir interfaces inmersivas.">Soy un desarrollador de software enfocado en resolver problemas complejos mediante código limpio y estructurado. Me apasiona explorar nuevas tecnologías y construir interfaces inmersivas.</p>
-    </div>
-</section>
+    <section id="nodo-sobre-mi" class="sub-space-panel">
+        <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+        <div class="space-content">
+            <h2>NODE // SOBRE_MÍ</h2>
+            <p class="typing-text" data-text="Soy un desarrollador de software enfocado en resolver problemas complejos mediante código limpio y estructurado. Me apasiona explorar nuevas tecnologías y construir interfaces inmersivas.">Soy un desarrollador de software enfocado en resolver problemas complejos mediante código limpio y estructurado. Me apasiona explorar nuevas tecnologías y construir interfaces inmersivas.</p>
+        </div>
+    </section>
 
-<section id="nodo-proyectos" class="sub-space-panel">
-    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
-    <div class="space-content">
-        <h2>NODE // PROYECTOS_ACTIVOS</h2>
-        <div class="projects-grid">
-            <div class="project-card">
-                <h3>01. AI_Brain_Portfolio</h3>
-                <p class="typing-text" data-text="Interfaz tridimensional interactiva construida con Three.js y CSS avanzado.">Interfaz tridimensional interactiva construida con Three.js y CSS avanzado.</p>
-            </div>
-            <div class="project-card">
-                <h3>02. Relational_Database_System</h3>
-                <p class="typing-text" data-text="Aplicación de gestión con almacenamiento optimizado mediante bases de datos relacionales.">Aplicación de gestión con almacenamiento optimizado mediante bases de datos relacionales.</p>
+    <section id="nodo-proyectos" class="sub-space-panel">
+        <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+        <div class="space-content">
+            <h2>NODE // PROYECTOS_ACTIVOS</h2>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <h3>01. AI_Brain_Portfolio</h3>
+                    <p class="typing-text" data-text="Interfaz tridimensional interactiva construida con Three.js y CSS avanzado.">Interfaz tridimensional interactiva construida con Three.js y CSS avanzado.</p>
+                </div>
+                <div class="project-card">
+                    <h3>02. Relational_Database_System</h3>
+                    <p class="typing-text" data-text="Aplicación de gestión con almacenamiento optimizado mediante bases de datos relacionales.">Aplicación de gestión con almacenamiento optimizado mediante bases de datos relacionales.</p>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
     <section id="nodo-stack" class="sub-space-panel">
         <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
@@ -83,10 +86,41 @@
             </ul>
         </div>
     </section>
+<!-- REEMPLAZA EL NODO NODO-ANALIZAR-OPERADOR EN TU INDEX.HTML CON ESTE -->
+<section id="nodo-analizar-operador" class="sub-space-panel">
+    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+    <div class="space-content" style="text-align: center;">
+        <h2>NODE // ANALIZAR_OPERADOR</h2>
+        <p style="margin-bottom: 25px; color: #00f3ff;">Haga clic en el módulo inferior para inicializar la síntesis de voz de la IA.</p>
+        
+        <button id="btn-hablar-ia" class="hud-btn" style="margin: 0 auto 30px auto; justify-content: center; gap: 10px;">
+            <span>EJECUTAR INTERFAZ DE VOZ</span>
+        </button>
+
+        <!-- Contenedor holográfico reactivo -->
+        <div id="scanner-box-reactive" class="operator-scanner-box" style="background: rgba(0, 243, 255, 0.05); border: 1px solid #00f3ff; padding: 20px; border-radius: 4px; text-align: left; transition: transform 0.05s ease-out, box-shadow 0.05s ease-out;">
+            
+            <!-- NUEVO: Ecualizador de ondas de audio CSS -->
+            <div class="audio-wave-container" style="display: flex; justify-content: center; align-items: flex-end; gap: 4px; height: 30px; margin-bottom: 15px;">
+                <div class="voice-wave-bar"></div>
+                <div class="voice-wave-bar"></div>
+                <div class="voice-wave-bar"></div>
+                <div class="voice-wave-bar"></div>
+                <div class="voice-wave-bar"></div>
+                <div class="voice-wave-bar"></div>
+                <div class="voice-wave-bar"></div>
+            </div>
+
+            <h4 style="color: #ff00ff; margin-bottom: 10px; font-size: 0.9rem;">EVALUACIÓN // SISTEMA_CORE:</h4>
+            <p id="texto-lectura-ia" class="typing-text" data-text="Acceso concedido. Inicializando el protocolo de telemetría cuántica. Bienvenido de nuevo, Operador David Marca. Todos los sistemas del portafolio tridimensional se encuentran operando a su máxima capacidad.">
+                Acceso concedido. Inicializando el protocolo de telemetría cuántica. Bienvenido de nuevo, Operador David Marca. Todos los sistemas del portafolio tridimensional se encuentran operando a su máxima capacidad.
+            </p>
+        </div>
+    </div>
+</section>
 
     <!-- LIBRERÍAS Y LÓGICA LOCAL -->
     <script src="three.min.js"></script>
     <script src="app.js"></script>
-
 </body>
 </html>

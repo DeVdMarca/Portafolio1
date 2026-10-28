@@ -233,6 +233,106 @@ body {
     margin-right: 15px;
 }
 
+/* 4. MÓDULO INTEGRADO: ANALIZAR OPERADOR & WIDGET DE VOZ */
+
+.voice-command-widget {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    pointer-events: auto;
+    z-index: 10;
+    background: rgba(15, 15, 30, 0.85);
+    border: 1px solid #00f3ff;
+    padding: 12px 18px;
+    color: #00f3ff;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
+    border-radius: 2px;
+}
+
+.voice-indicator {
+    width: 10px;
+    height: 10px;
+    background: #00f3ff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00f3ff;
+    animation: pulsoVoz 2s infinite ease-in-out;
+}
+
+.operator-scanner-box {
+    background: rgba(0, 243, 255, 0.02);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    padding: 25px;
+    margin-top: 20px;
+    width: 100%;
+    position: relative;
+    box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+}
+
+.operator-scanner-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #00f3ff;
+    opacity: 0.7;
+    box-shadow: 0 0 10px #00f3ff;
+    animation: barridoScanner 3s infinite ease-in-out;
+}
+
+.scanner-grid {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    color: rgba(0, 243, 255, 0.8);
+    font-size: 0.85rem;
+    border-top: 1px dashed rgba(0, 243, 255, 0.2);
+    padding-top: 15px;
+}
+/* --- ANIMADOR DE ONDAS REACTIVAS --- */
+.voice-wave-bar {
+    width: 4px;
+    height: 100%;
+    background: #00f3ff;
+    box-shadow: 0 0 8px #00f3ff;
+    transform-origin: bottom;
+    /* La altura de cada barra se escala según el volumen capturado por JS */
+    transform: scaleY(calc(0.1 + var(--volume, 0) * 1.5));
+    transition: transform 0.05s ease-out;
+}
+
+/* Alterar dinámicamente las barras impares para mayor variedad visual */
+.voice-wave-bar:nth-child(odd) {
+    background: #ff00ff;
+    box-shadow: 0 0 8px #ff00ff;
+    transform: scaleY(calc(0.1 + var(--volume, 0) * 2.2));
+}
+
+/* Efecto de vibración y sobrecarga en la caja contenedora completa */
+.operator-scanner-box.vibrating {
+    transform: scale(calc(1 + var(--volume, 0) * 0.03)) translate(calc(var(--volume) * 2px), calc(var(--volume) * -2px));
+    box-shadow: 0 0 calc(15px + var(--volume, 0) * 35px) rgba(0, 243, 255, calc(0.2 + var(--volume, 0) * 0.6));
+    border-color: rgba(255, 0, 255, calc(0.3 + var(--volume, 0) * 0.7)) !important;
+}
+
+/* ANIMACIONES COMPLEMENTARIAS */
+@keyframes pulsoVoz {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.2); opacity: 1; }
+}
+
+@keyframes barridoScanner {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
 /* --- ANIMACIONES DE ROTACIÓN --- */
 @keyframes rotarDerecha {
     from { transform: rotate(0deg); }
