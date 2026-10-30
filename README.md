@@ -1,4 +1,4 @@
-# 🧠 OrgaTime // Cybernetic AI Portfolio
+#  AI Portfolio
 
 Un portafolio web interactivo tridimensional en **Three.js** con un ecosistema de diseño futurista, simulación de fallos del sistema y una interfaz de **síntesis de voz reactiva** nativa (Web Speech API).
 
