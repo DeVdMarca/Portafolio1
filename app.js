@@ -1,13 +1,27 @@
-// Variables globales del motor 3D y control de mouse
+// ==========================================================================
+// CONFIGURACIÓN GLOBAL DEL MOTOR 3D Y VARIABLES DE CONTROL
+// ==========================================================================
 let scene, camara, renderer, particleSystem;
-let mouseX = 0, mouseY = 0; // Guardarán la posición del cursor del usuario
 
-// Variables para suavizar el movimiento del mouse (Efecto inercia)
+// Variables de interacción del cursor (¡Restauradas!)
+let mouseX = 0, mouseY = 0; 
 let targetX = 0, targetY = 0;
 
 // Variable global para conectar el volumen simulado de la voz con Three.js
 let volumenActual = 0;
 
+// Configuración dinámica de la Red Neuronal Viva
+let cadenasDeImpulsos = []; // Almacena los caminos dinámicos activos
+const maxCadenasSimultaneas = 5; // Cuántas cadenas independientes viajan a la vez
+const nodosPorCadena = 4; // Cuántos eslabones tiene cada cadena conectada
+
+// Configuración central de buffers
+const maxLineas = 1000; 
+
+// Referencias globales para renderizado de la red
+let redLineas, redDestellos, lineaMaterial, destelloMaterial;
+
+// Dimensiones de pantalla dividida para centrar coordenadas
 const windowHalfX = window.innerWidth / 2;
 const windowHalfY = window.innerHeight / 2;
 
@@ -27,17 +41,60 @@ function init() {
 
     // ESCUCHADORES DE EVENTOS DE INTERACTIVIDAD TOTAL
     window.addEventListener('resize', onWindowResize);
-    // Captura el movimiento del mouse en toda la pantalla
     document.addEventListener('mousemove', onDocumentMouseMove);
 
     // Inicializar el sistema de síntesis de voz
     initVoiceSynthesis();
 
+    // --- CONSTRUCCIÓN GEOMÉTRICA DE LA RED NEURONAL VIVA ---
+    const lineaGeometry = new THREE.BufferGeometry();
+    const posicionesLineas = new Float32Array(maxLineas * 2 * 3); 
+    lineaGeometry.setAttribute('position', new THREE.BufferAttribute(posicionesLineas, 3));
+
+    lineaMaterial = new THREE.LineBasicMaterial({
+        color: 0x00f3ff,
+        transparent: true,
+        opacity: 0.4,
+        blending: THREE.AdditiveBlending
+    });
+    redLineas = new THREE.LineSegments(lineaGeometry, lineaMaterial);
+    scene.add(redLineas);
+
+    // Sistema de destellos brillantes en los puntos de anclaje
+    const destelloGeometry = new THREE.BufferGeometry();
+    const posicionesDestellos = new Float32Array(maxLineas * 3);
+    destelloGeometry.setAttribute('position', new THREE.BufferAttribute(posicionesDestellos, 3));
+
+    destelloMaterial = new THREE.PointsMaterial({
+        color: 0xffffff, // Blanco incandescente puro
+        size: 0.08,      // ¡Tamaño corregido! Escala sutil para que sea un microdestello elegante
+        transparent: true,
+        opacity: 0.9,    // Máxima fuerza visual
+        blending: THREE.AdditiveBlending, 
+        depthWrite: false
+    });
+
+    // Filtro matemático shader: Recorta las esquinas y los convierte en destellos circulares limpios
+    destelloMaterial.onBeforeCompile = function (shader) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <output_fragment>',
+            `
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            float r = dot(cxy, cxy);
+            if (r > 1.0) discard; // Elimina los bordes cuadrados gigantes
+            #include <output_fragment>
+            `
+        );
+    };
+    redDestellos = new THREE.Points(destelloGeometry, destelloMaterial);
+    scene.add(redDestellos);
+
     animate();
 }
 
+
 function createBrainParticles() {
-    const particlesCount = 2500; // Subimos a 2500 partículas para mayor densidad visual
+    const particlesCount = 4000; // Alta densidad visual
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particlesCount * 3); 
         
@@ -47,13 +104,28 @@ function createBrainParticles() {
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
+    // Material base con descarte de fragmentos nativo
     const material = new THREE.PointsMaterial({
         color: 0x00f3ff,
-        size: 0.04, 
+        size: 0.02, // Tamaño fino inicial
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending 
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
     });
+
+    // Filtro matemático para convertir cuadrados en círculos perfectos
+    material.onBeforeCompile = function (shader) {
+        shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <output_fragment>',
+            `
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            float r = dot(cxy, cxy);
+            if (r > 1.0) discard; // Recorta los bordes rígidos del cuadrado
+            #include <output_fragment>
+            `
+        );
+    };
 
     particleSystem = new THREE.Points(geometry, material);
     scene.add(particleSystem);
@@ -74,36 +146,155 @@ function onWindowResize() {
 // BUCLE DE ANIMACIÓN
 let espacioActual = 'core'; 
 
+// Función para crear o actualizar un salto aleatorio en la red
+function actualizarCadenasAleatorias(totalParticulas) {
+    // Si faltan cadenas vivas en la red, inicializamos una nueva con origen aleatorio
+    while (cadenasDeImpulsos.length < maxCadenasSimultaneas) {
+        let origenAleatorio = Math.floor(Math.random() * totalParticulas);
+        cadenasDeImpulsos.push([origenAleatorio]);
+    }
+
+    // Cada cierto intervalo orgánico (por ejemplo, usando frames), hacemos que avancen y suelten
+    cadenasDeImpulsos.forEach((cadena) => {
+        // Añadir nuevo nodo aleatorio al frente de la cadena
+        let nodoUltimo = cadena[cadena.length - 1];
+        let siguienteNodo = Math.floor(Math.random() * totalParticulas);
+        
+        // Evitamos que se conecte consigo misma
+        while (siguienteNodo === nodoUltimo) {
+            siguienteNodo = Math.floor(Math.random() * totalParticulas);
+        }
+
+        cadena.push(siguienteNodo);
+
+        // EFECTO SOLTAR: Si la cadena supera el largo estipulado, eliminamos el eslabón más viejo
+        if (cadena.length > nodosPorCadena) {
+            cadena.shift(); 
+        }
+    });
+}
+
+function renderizarRedViva() {
+    const particulas = particleSystem.geometry.attributes.position.array;
+    const totalParticulas = particulas.length / 3;
+
+    // Ejecuta el salto aleatorio continuamente
+    if (Math.random() < 0.15) { // Controla la velocidad del pulso eléctrico
+        actualizarCadenasAleatorias(totalParticulas);
+    }
+
+    const posLineasArr = redLineas.geometry.attributes.position.array;
+    const posDestellosArr = redDestellos.geometry.attributes.position.array;
+    
+    let indexLinea = 0;
+    let indexDestello = 0;
+
+    // Recorremos las cadenas para mapear sus coordenadas 3D exactas en pantalla
+    cadenasDeImpulsos.forEach((cadena) => {
+        for (let i = 0; i < cadena.length - 1; i++) {
+            let nodoA = cadena[i];
+            let nodoB = cadena[i + 1];
+
+            // Coordenadas Nodo A
+            let ax = particulas[nodoA * 3];
+            let ay = particulas[nodoA * 3 + 1];
+            let az = particulas[nodoA * 3 + 2];
+
+            // Coordenadas Nodo B
+            let bx = particulas[nodoB * 3];
+            let by = particulas[nodoB * 3 + 1];
+            let bz = particulas[nodoB * 3 + 2];
+
+            // Dibujar la línea de conexión
+            posLineasArr[indexLinea * 6] = ax;
+            posLineasArr[indexLinea * 6 + 1] = ay;
+            posLineasArr[indexLinea * 6 + 2] = az;
+            posLineasArr[indexLinea * 6 + 3] = bx;
+            posLineasArr[indexLinea * 6 + 4] = by;
+            posLineasArr[indexLinea * 6 + 5] = bz;
+
+            // Colocar un destello luminoso exactamente en la unión/nodo de activación
+            posDestellosArr[indexDestello * 3] = bx;
+            posDestellosArr[indexDestello * 3 + 1] = by;
+            posDestellosArr[indexDestello * 3 + 2] = bz;
+
+            indexLinea++;
+            indexDestello++;
+        }
+    });
+
+    // Limpiar el resto de buffers para que las líneas viejas de frames anteriores desaparezcan de golpe al soltarse
+    for (let i = indexLinea; i < maxLineas; i++) {
+        posLineasArr[i * 6] = posLineasArr[i * 6 + 1] = posLineasArr[i * 6 + 2] = 0;
+        posLineasArr[i * 6 + 3] = posLineasArr[i * 6 + 4] = posLineasArr[i * 6 + 5] = 0;
+        posDestellosArr[i * 3] = posDestellosArr[i * 3 + 1] = posDestellosArr[i * 3 + 2] = 0;
+    }
+
+    // Indicar a Three.js que renderice los nuevos datos dinámicos actualizados
+    redLineas.geometry.attributes.position.needsUpdate = true;
+    redDestellos.geometry.attributes.position.needsUpdate = true;
+
+    // Vincular colores de las líneas a la transición de la sección actual
+    lineaMaterial.color.copy(particleSystem.material.color);
+    
+    // FIJADO: Comentamos la línea de copia para que destelloMaterial conserve su color blanco luminoso nativo
+    // destelloMaterial.color.copy(particleSystem.material.color);
+    
+    // Parpadeo sutil orgánico en los destellos para simular pulsos de luz de vida
+    destelloMaterial.opacity = 0.7 + Math.sin(Date.now() * 0.02) * 0.3;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
-    targetX += (mouseX - targetX) * 0.05;
-    targetY += (mouseY - targetY) * 0.05;
+    targetX += (mouseX - targetX) * 0.01;
+    targetY += (mouseY - targetY) * 0.01;
 
     if (particleSystem) {
         // Detectamos si el sistema está en cortocircuito (Rojo) por la transición
         const esFallo = particleSystem.material.color.getHex() === 0xff3333;
-        const multiplicadorVelocidad = esFallo ? 6 : 1;
+        const multiplicadorVelocidad = esFallo ? 4 : 1;
 
-        // Resetear tamaño base si no está en modo fallo
+        // --- 1. MOVIMIENTO ORGÁNICO INDEPENDIENTE DE CADA PARTÍCULA ---
+        const posiciones = particleSystem.geometry.attributes.position.array;
+        const tiempo = Date.now() * 0.0005; // Controla la suavidad del flujo flotante
+
+        for (let i = 0; i < posiciones.length; i += 3) {
+            // Cada partícula oscila sutilmente en sus ejes X e Y de forma asíncrona
+            posiciones[i]     += Math.sin(tiempo + i) * 0.001 * multiplicadorVelocidad;
+            posiciones[i + 1] += Math.cos(tiempo + i) * 0.001 * multiplicadorVelocidad;
+        }
+        // Le indicamos a Three.js que actualice los vértices en este fotograma
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+
+        // --- 2. CONTROL ESTABLE DE TAMAÑO BASE (SUTIL Y FIJO) ---
         if (!esFallo && espacioActual !== 'analizar-operador') {
-            particleSystem.material.size = 0.04;
+            // Mantenemos un tamaño ultra-fino y constante para evitar el estiramiento cuadrado
+            particleSystem.material.size = 0.02;
         }
 
         // --- COMPORTAMIENTO SEGÚN EL ESPACIO INTERACTIVO ---
         if (espacioActual === 'core') {
-            particleSystem.rotation.y += 0.0008 * multiplicadorVelocidad;
-            particleSystem.rotation.x += 0.0003 * multiplicadorVelocidad;
+            particleSystem.rotation.y += 0.0001 * multiplicadorVelocidad;
+            particleSystem.rotation.x += 0.0002 * multiplicadorVelocidad;
             
-            particleSystem.rotation.y += targetX * 0.02;
-            particleSystem.rotation.x += targetY * 0.02;
+            particleSystem.rotation.y += targetX * 0.01;
+            particleSystem.rotation.x += targetY * 0.01;
+
+            // Si hay un glitch/fallo en el core, hacemos una pequeña sacudida caótica de posición
+            if (esFallo) {
+                particleSystem.position.x = (Math.random() - 0.5) * 0.1;
+                particleSystem.position.y = (Math.random() - 0.5) * 0.1;
+            } else {
+                particleSystem.position.set(0, 0, 0);
+            }
 
         } else if (espacioActual === 'sobre-mi') {
             particleSystem.rotation.y += 0.002;
             particleSystem.position.z = Math.sin(Date.now() * 0.001) * 0.5;
 
         } else if (espacioActual === 'proyectos') {
-            particleSystem.rotation.z += 0.005;
+            particleSystem.rotation.z += 0.002;
             particleSystem.rotation.y += 0.001;
             
             particleSystem.position.x = targetX * 0.5;
@@ -130,8 +321,13 @@ function animate() {
         }
     }
 
+    if (typeof renderizarRedViva === "function") {
+        renderizarRedViva();
+    }
+
     renderer.render(scene, camara); 
 }
+
 
 // --- LÓGICA DE NAVEGACIÓN CON EFECTO FALLO DEL SISTEMA ---
 function activarNodo(nombreNodo) {
@@ -155,11 +351,12 @@ function activarNodo(nombreNodo) {
 
     espacioActual = nombreNodo;
 
-    const panelObjetivo = document.getElementById(
-        nombreNodo === 'sobre-mi' ? 'nodo-sobre-mi' : 
-        nombreNodo === 'proyectos' ? 'nodo-proyectos' : 
-        nombreNodo === 'analizar-operador' ? 'nodo-analizar-operador' : 'nodo-stack'
-    );
+   const panelObjetivo = document.getElementById(
+    nombreNodo === 'sobre-mi' ? 'nodo-sobre-mi' : 
+    nombreNodo === 'proyectos' ? 'nodo-proyectos' : 
+    nombreNodo === 'analizar-operador' ? 'nodo-analizar-operador' : 'nodo-stack'
+);
+
     
     setTimeout(() => {
         bodyElement.classList.remove('sistema-fallo');

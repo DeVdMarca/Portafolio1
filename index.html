@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>David | IA Portafolio core</title>
+    <link rel="stylesheet" href="https://jsdelivr.net">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -50,76 +51,288 @@
     </main>
 
     <!-- CONTENEDORES DE LOS NODOS DE MEMORIA (SUB-ESPACIOS OCULTOS) -->
-    <section id="nodo-sobre-mi" class="sub-space-panel">
-        <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
-        <div class="space-content">
-            <h2>NODE // SOBRE_MÍ</h2>
-            <p class="typing-text" data-text="Soy un desarrollador de software enfocado en resolver problemas complejos mediante código limpio y estructurado. Me apasiona explorar nuevas tecnologías y construir interfaces inmersivas.">Soy un desarrollador de software enfocado en resolver problemas complejos mediante código limpio y estructurado. Me apasiona explorar nuevas tecnologías y construir interfaces inmersivas.</p>
-        </div>
-    </section>
-
-    <section id="nodo-proyectos" class="sub-space-panel">
-        <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
-        <div class="space-content">
-            <h2>NODE // PROYECTOS_ACTIVOS</h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <h3>01. AI_Brain_Portfolio</h3>
-                    <p class="typing-text" data-text="Interfaz tridimensional interactiva construida con Three.js y CSS avanzado.">Interfaz tridimensional interactiva construida con Three.js y CSS avanzado.</p>
-                </div>
-                <div class="project-card">
-                    <h3>02. Relational_Database_System</h3>
-                    <p class="typing-text" data-text="Aplicación de gestión con almacenamiento optimizado mediante bases de datos relacionales.">Aplicación de gestión con almacenamiento optimizado mediante bases de datos relacionales.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="nodo-stack" class="sub-space-panel">
-        <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
-        <div class="space-content">
-            <h2>NODE // CORE_STACK</h2>
-            <ul class="tech-list">
-                <li><span class="tech-tag">LANGUAGES</span> Python, JavaScript, SQL</li>
-                <li><span class="tech-tag">FRONTEND</span> HTML5, CSS3, Three.js</li>
-                <li><span class="tech-tag">TOOLS</span> Git, GitHub, VS Code</li>
-            </ul>
-        </div>
-    </section>
-<!-- REEMPLAZA EL NODO NODO-ANALIZAR-OPERADOR EN TU INDEX.HTML CON ESTE -->
-<section id="nodo-analizar-operador" class="sub-space-panel">
+ <!-- SECCIÓN SOBRE MÍ -->
+<section id="nodo-sobre-mi" class="sub-space-panel">
     <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
-    <div class="space-content" style="text-align: center;">
-        <h2>NODE // ANALIZAR_OPERADOR</h2>
-        <p style="margin-bottom: 25px; color: #00f3ff;">Haga clic en el módulo inferior para inicializar la síntesis de voz de la IA.</p>
-        
-        <button id="btn-hablar-ia" class="hud-btn" style="margin: 0 auto 30px auto; justify-content: center; gap: 10px;">
-            <span>EJECUTAR INTERFAZ DE VOZ</span>
-        </button>
+    <div class="space-content">
+        <h2>NODE // PERFIL_OPERADOR</h2>
+        <p style="color: rgba(0, 243, 255, 0.6); margin-bottom: 25px; font-size: 0.85rem;">
+            // Desplegando registro de datos de David Ricardo Marca Salazar.
+        </p>
 
-        <!-- Contenedor holográfico reactivo -->
-        <div id="scanner-box-reactive" class="operator-scanner-box" style="background: rgba(0, 243, 255, 0.05); border: 1px solid #00f3ff; padding: 20px; border-radius: 4px; text-align: left; transition: transform 0.05s ease-out, box-shadow 0.05s ease-out;">
-            
-            <!-- NUEVO: Ecualizador de ondas de audio CSS -->
-            <div class="audio-wave-container" style="display: flex; justify-content: center; align-items: flex-end; gap: 4px; height: 30px; margin-bottom: 15px;">
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
-                <div class="voice-wave-bar"></div>
+        <div class="about-layout">
+            <!-- COLUMNA IZQUIERDA: Perfil e Información Básica -->
+            <div class="about-main-box">
+                <div class="terminal-header-bar">PROFILE_REGISTRY.DAT</div>
+                <div class="terminal-body-content">
+                    <p class="profile-text">
+                        Desarrollador Junior Full-Stack y estudiante de Ingeniería de Inteligencia Artificial y Ciencia de Datos. Enfocado en la resolución lógica de problemas mediante backend en Java y la creación de interfaces interactivas. Mi principal motor es la curiosidad técnica y la disciplina, aplicadas a escribir código limpio y estructurado.
+                    </p>
+                    <div class="profile-meta-grid">
+                        <div><span class="meta-label">EDAD:</span> 31 Ciclos (Años)</div>
+                        <div><span class="meta-label">UBICACIÓN:</span> Bogotá, COL</div>
+                        <div><span class="meta-label">SISTEMA:</span> Linux / Windows</div>
+                    </div>
+                </div>
             </div>
 
-            <h4 style="color: #ff00ff; margin-bottom: 10px; font-size: 0.9rem;">EVALUACIÓN // SISTEMA_CORE:</h4>
-            <p id="texto-lectura-ia" class="typing-text" data-text="Acceso concedido. Inicializando el protocolo de telemetría cuántica. Bienvenido de nuevo, Operador David Marca. Todos los sistemas del portafolio tridimensional se encuentran operando a su máxima capacidad.">
-                Acceso concedido. Inicializando el protocolo de telemetría cuántica. Bienvenido de nuevo, Operador David Marca. Todos los sistemas del portafolio tridimensional se encuentran operando a su máxima capacidad.
-            </p>
+            <!-- COLUMNA DERECHA: Formación y Experiencia -->
+            <div class="about-secondary-box">
+                <!-- Bloque Educación -->
+                <div class="info-block">
+                    <h4>[ ACADEMIC_LOGS ]</h4>
+                    <ul class="timeline-list">
+                        <li>
+                            <span class="time-tag">ACTUAL</span>
+                            <strong>Ing. Inteligencia Artificial y Ciencia de Datos</strong>
+                            <p class="institution">UNAD (Etapa Práctica)</p>
+                        </li>
+                        <li>
+                            <span class="time-tag">2026</span>
+                            <strong>Bootcamp Junior Full Stack Java Developer</strong>
+                            <p class="institution">Generation Colombia</p>
+                        </li>
+                        <li>
+                            <span class="time-tag">2026</span>
+                            <strong>Bootcamp Inteligencia Artificial</strong>
+                            <p class="institution">Talento Tech (MinTIC)</p>
+                        </li>
+                        <li>
+                            <span class="time-tag">SENA</span>
+                            <strong>Técnico en Programación de Software</strong>
+                            <p class="institution">Servicio Nacional de Aprendizaje</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Bloque Experiencia -->
+                <div class="info-block" style="margin-top: 20px;">
+                    <h4>[ HISTORIAL_OPERATIVO ]</h4>
+                    <ul class="timeline-list">
+                        <li>
+                            <span class="time-tag">ML</span>
+                            <strong>Operaciones Logísticas de Almacén</strong>
+                            <p class="work-desc">Mercado Libre Warehouse. Gestión de flujos críticos de distribución y trazabilidad de datos bajo entornos de alta exigencia.</p>
+                        </li>
+                        <li>
+                            <span class="time-tag">CORP</span>
+                            <strong>Agente de Operaciones Terrestres</strong>
+                            <p class="work-desc">Talma-SAI. Ejecución de protocolos de seguridad operacional, optimización de tiempos logísticos y coordinación de tareas complejas.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
+
+    <!-- SECCIÓN PROYECTOS -->
+<section id="nodo-proyectos" class="sub-space-panel">
+    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+    <div class="space-content">
+        <h2>NODE // PROYECTOS_ACCESIBLES</h2>
+        <p style="color: rgba(0, 243, 255, 0.6); margin-bottom: 25px; font-size: 0.85rem;">
+            // Mostrando repositorios activos indexados en el núcleo.
+        </p>
+
+        <!-- Cuadrícula optimizada de proyectos -->
+        <div class="projects-grid">
+            
+            <!-- TARJETA 1: ChronoTask / OrgaTime -->
+            <div class="project-card">
+                <div class="project-header">
+                    <span class="project-id">ID_001</span>
+                    <span class="project-status">[ DEPLOYED ]</span>
+                </div>
+                <h3>ChronoTask </h3>
+                <p class="project-desc">
+                    Organizador de tareas inteligente desarrollado con arquitectura Java para el backend y Bootstrap para una interfaz limpia. Implementa control de estados de tareas y vistas dinámicas.
+                </p>
+                <div class="project-techs">
+                    <span class="badge-tech">Java</span>
+                    <span class="badge-tech">JavaScript</span>
+                    <span class="badge-tech">Bootstrap</span>
+                </div>
+                <div class="project-actions">
+                    <a href="https://devdmarca.github.io/ChronoTask-Proyecto/" target="_blank" class="project-link">[ SOURCE_CODE ]</a>
+                </div>
+            </div>
+
+            <!-- TARJETA 2: ProyectoFinal-Frontend -->
+            <div class="project-card">
+                <div class="project-header">
+                    <span class="project-id">ID_002</span>
+                    <span class="project-status">[ STABLE ]</span>
+                </div>
+                <h3>ProyectoFinal/ Blank_Space</h3>
+                <p class="project-desc">
+                    Aplicación web enfocada en la experiencia de usuario y diseño responsivo. Maquetación avanzada utilizando semántica HTML5 pura, layouts complejos en CSS3 y componentes de Bootstrap.
+                </p>
+                <div class="project-techs">
+                    <span class="badge-tech">HTML5</span>
+                    <span class="badge-tech">CSS3</span>
+                    <span class="badge-tech">Bootstrap</span>
+                </div>
+                <div class="project-actions">
+                    <a href="https://jhonatanreyes276.github.io/ProyectoFinal-Frontend/" target="_blank" class="project-link">[ LIVE_DEMO ]</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+ <!-- SECCIÓN CORE STACK (TECNOLOGÍAS) -->
+<section id="nodo-stack" class="sub-space-panel">
+    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+    <div class="space-content">
+        <h2>NODE // CORE_STACK</h2>
+        <p style="color: rgba(0, 243, 255, 0.6); margin-bottom: 25px; font-size: 0.85rem;">
+            // Repositorio de tecnologías, lenguajes y entornos de desarrollo dominados.
+        </p>
+
+        <div class="stack-grid">
+            
+            <!-- CARD 1: JAVA -->
+            <div class="stack-card">
+                <div class="bg-text-logo">JAVA</div>
+                <div class="stack-card-info">
+                    <h3>Java</h3>
+                    <p>// Backend Development, Programación Orientada a Objetos y lógica estructural.</p>
+                </div>
+            </div>
+
+            <!-- CARD 2: JAVASCRIPT -->
+            <div class="stack-card">
+                <div class="bg-text-logo">JS</div>
+                <div class="stack-card-info">
+                    <h3>JavaScript</h3>
+                    <p>// Funcionalidad dinámica, interacción del DOM y conexión asíncrona.</p>
+                </div>
+            </div>
+
+            <!-- CARD 3: HTML5 & CSS3 -->
+            <div class="stack-card">
+                <div class="bg-text-logo">&lt;/&gt;</div>
+                <div class="stack-card-info">
+                    <h3>HTML5 / CSS3</h3>
+                    <p>// Estructuración semántica limpia y hojas de estilo con animaciones complejas.</p>
+                </div>
+            </div>
+
+            <!-- CARD 4: BOOTSTRAP -->
+            <div class="stack-card">
+                <div class="bg-text-logo">B_ST</div>
+                <div class="stack-card-info">
+                    <h3>Bootstrap</h3>
+                    <p>// Framework ágil para diseño e interfaces adaptables y responsivas.</p>
+                </div>
+            </div>
+
+            <!-- CARD 5: PYTHON -->
+            <div class="stack-card">
+                <div class="bg-text-logo">PY</div>
+                <div class="stack-card-info">
+                    <h3>Python</h3>
+                    <p>// Fundamentos de scripts lógicos y análisis de datos en entornos de IA.</p>
+                </div>
+            </div>
+
+            <!-- CARD 6: MYSQL -->
+            <div class="stack-card">
+                <div class="bg-text-logo">SQL</div>
+                <div class="stack-card-info">
+                    <h3>MySQL</h3>
+                    <p>// Gestión de bases de datos relacionales, diseño de esquemas y consultas optimizadas.</p>
+                </div>
+            </div>
+
+            <!-- CARD 7: IDE / ENVIRONMENTS -->
+            <div class="stack-card" style="grid-column: span 2;">
+                <div class="bg-text-logo">IDE</div>
+                <div class="stack-card-info">
+                    <h3>IDE / Environments</h3>
+                    <p>// Control de código y desarrollo en entornos avanzados como Visual Studio Code y IntelliJ IDEA.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+
+<!-- SECCIÓN 3: CONSOLA DE TELEMETRÍA -->
+<section id="nodo-analizar-operador" class="sub-space-panel">
+    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+    <div class="space-content">
+        <h2>NODE // OPERATOR_DIAGNOSTIC</h2>
+        <p style="color: rgba(0, 243, 255, 0.6); margin-bottom: 25px; font-size: 0.85rem;">
+            // Inicializando interfaz de telemetría y análisis de rendimiento neuronal.
+        </p>
+
+        <div class="diagnostic-container">
+            
+            <!-- Bloque Izquierdo: Monitor de Estado y Ecualizador -->
+            <div class="diagnostic-main">
+                <div class="terminal-header-bar">VOICE_REACTION_EQUALIZER.SYS</div>
+                <div class="terminal-body-content diagnostic-center">
+                    
+                    <!-- El ecualizador de 7 barras animadas -->
+                    <div class="voice-equalizer">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    
+                    <div class="system-status-text">
+                        <span class="pulse-indicator"></span> AI_LINK: CONNECTED // VOICE_STREAM: ACTIVE
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bloque Derecho: Logs y Métricas -->
+            <div class="diagnostic-side">
+                <div class="info-block">
+                    <h4>[ SYSTEM_LOGS ]</h4>
+                    <div class="logs-console">
+                        <p class="log-row"><span class="log-time">[10:30:15]</span> INITIALIZING CORE CORE_STACK...</p>
+                        <p class="log-row"><span class="log-time">[10:30:17]</span> LOGISTIC_DATA_FLOW: COMPLETED</p>
+                        <p class="log-row"><span class="log-time">[10:30:18]</span> COGNITIVE_LOAD: OPTIMAL (100%)</p>
+                        <p class="log-row" style="color: #ff00ff;"><span class="log-time">[10:30:19]</span> STATUS: OPERATOR_ONLINE</p>
+                    </div>
+                </div>
+
+                <div class="info-block" style="margin-top: 15px;">
+                    <h4>[ CORE_STRENGTHS ]</h4>
+                    <div class="stat-row">
+                        <span class="stat-name">DISCIPLINA:</span>
+                        <div class="stat-bar-container"><div class="stat-bar" style="width: 95%;"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">CURIOSIDAD:</span>
+                        <div class="stat-bar-container"><div class="stat-bar" style="width: 90%;"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-name">LOGÍSTICA:</span>
+                        <div class="stat-bar-container"><div class="stat-bar" style="width: 85%;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+
     <!-- LIBRERÍAS Y LÓGICA LOCAL -->
+   
     <script src="three.min.js"></script>
     <script src="app.js"></script>
 </body>
