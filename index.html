@@ -11,7 +11,7 @@
    
     <!-- El lienzo donde se renderizará el fondo tridimensional -->
     <canvas id="ia-brain-canvas"></canvas>
-
+    <div id="satelites-hud"></div>
     <!-- Capa de interfaz de usuario (HUD) superior -->
     <main class="ui-wrapper">
         <div class="hud-container">
@@ -53,7 +53,9 @@
     <!-- CONTENEDORES DE LOS NODOS DE MEMORIA (SUB-ESPACIOS OCULTOS) -->
  <!-- SECCIÓN SOBRE MÍ -->
 <section id="nodo-sobre-mi" class="sub-space-panel">
-    <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
+    <button class="btn-back" onclick="regresarAlCore()" aria-label="Volver al menú principal">
+        <span class="back-arrow">←</span> VOLVER AL NÚCLEO <span class="key-hint">[ESC]</span>
+    </button>
     <div class="space-content">
         <h2>NODE // PERFIL_OPERADOR</h2>
         <p style="color: rgba(0, 243, 255, 0.6); margin-bottom: 25px; font-size: 0.85rem;">
@@ -61,15 +63,14 @@
         </p>
 
         <div class="about-layout">
-            <!-- COLUMNA IZQUIERDA: Perfil e Información Básica -->
-            <div class="about-main-box">
-                <div class="terminal-header-bar">PROFILE_REGISTRY.DAT</div>
+                <div class="about-main-box">
+            <div class="terminal-header-bar">PROFILE_REGISTRY.DAT</div>
                 <div class="terminal-body-content">
                     <p class="profile-text">
-                        Desarrollador Junior Full-Stack y estudiante de Ingeniería de Inteligencia Artificial y Ciencia de Datos. Enfocado en la resolución lógica de problemas mediante backend en Java y la creación de interfaces interactivas. Mi principal motor es la curiosidad técnica y la disciplina, aplicadas a escribir código limpio y estructurado.
+                        Desarrollador Junior Full-Stack y estudiante de Ingeniería de IA y Ciencia de Datos. Especializado en lógica backend con Java e interfaces web interactivas, impulsado por la curiosidad técnica y el código limpio.
                     </p>
                     <div class="profile-meta-grid">
-                        <div><span class="meta-label">EDAD:</span> 31 Ciclos (Años)</div>
+                        <div><span class="meta-label">EDAD:</span> 31 Años</div>
                         <div><span class="meta-label">UBICACIÓN:</span> Bogotá, COL</div>
                         <div><span class="meta-label">SISTEMA:</span> Linux / Windows</div>
                     </div>
@@ -85,7 +86,7 @@
                         <li>
                             <span class="time-tag">ACTUAL</span>
                             <strong>Ing. Inteligencia Artificial y Ciencia de Datos</strong>
-                            <p class="institution">UNAD (Etapa Práctica)</p>
+                            <p class="institution">UNAD (En Formacion)</p>
                         </li>
                         <li>
                             <span class="time-tag">2026</span>
@@ -179,11 +180,13 @@
                 </div>
             </div>
 
+            
         </div>
     </div>
 </section>
 
  <!-- SECCIÓN CORE STACK (TECNOLOGÍAS) -->
+
 <section id="nodo-stack" class="sub-space-panel">
     <button class="btn-back" onclick="regresarAlCore()">[ ESC_REGRESAR_AL_CORE ]</button>
     <div class="space-content">
@@ -253,7 +256,7 @@
                 <div class="bg-text-logo">IDE</div>
                 <div class="stack-card-info">
                     <h3>IDE / Environments</h3>
-                    <p>// Control de código y desarrollo en entornos avanzados como Visual Studio Code y IntelliJ IDEA.</p>
+                    <p>// Control de código y desarrollo en entornos avanzados como Visual Studio Code , IntelliJ IDEA y manejos de versiones en GIT & GitHub.</p>
                 </div>
             </div>
 

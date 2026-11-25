@@ -1,5 +1,6 @@
 
 
+
 /* 1. CONFIGURACIÓN BASE Y CONTROL DE CAPAS (Z-INDEX) */
 * {
     margin: 0;
@@ -181,20 +182,43 @@ body {
 }
 
 .btn-back {
-    position: absolute;
-    top: 40px;
-    left: 40px;
-    background: transparent;
-    border: none;
-    color: rgba(0, 243, 255, 0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 20, 30, 0.85);
+    color: #00f3ff;
+    border: 1px solid rgba(0, 243, 255, 0.6);
+    padding: 10px 18px;
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 1px;
     cursor: pointer;
-    transition: color 0.3s ease;
+    border-radius: 4px;
+    box-shadow: 0 0 12px rgba(0, 243, 255, 0.2);
+    transition: all 0.25s ease;
+    margin-bottom: 20px;
 }
 
 .btn-back:hover {
-    color: #00f3ff;
+    background: rgba(0, 243, 255, 0.15);
+    border-color: #00f3ff;
+    box-shadow: 0 0 18px rgba(0, 243, 255, 0.5);
+    transform: translateX(-3px);
+}
+
+.btn-back .back-arrow {
+    font-size: 1.1rem;
+    transition: transform 0.25s ease;
+}
+
+.btn-back:hover .back-arrow {
+    transform: translateX(-4px);
+}
+
+.btn-back .key-hint {
+    color: rgba(255, 0, 255, 0.85);
+    font-size: 0.75rem;
 }
 
 /* Cuadrícula de proyectos */
@@ -202,6 +226,14 @@ body {
     display: flex;
     gap: 20px;
     margin-top: 20px;
+}
+
+.profile-text {
+    text-align: left; /* Elimina los espacios vacíos irregulares entre palabras */
+    line-height: 1.65;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
 }
 
 .project-card {
@@ -638,12 +670,7 @@ body {
     margin: 0;
 }
 
-/* ==========================================================================
-   ANCLAJE EXCLUSIVO: DIAGNÓSTICO OPERADOR (#analizar-operador)
-   ========================================================================== */
-/* ==========================================================================
-   ANCLAJE EXCLUSIVO Y CORREGIDO: DIAGNÓSTICO OPERADOR (#nodo-analizar-operador)
-   ========================================================================== */
+
 #nodo-analizar-operador .diagnostic-container {
     display: flex;
     gap: 20px;
@@ -795,4 +822,39 @@ body {
 
 #nodo-analizar-operador .stat-row:nth-child(even) .stat-bar {
     background: #ff00ff;
+}
+
+#satelites-hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none; /* No bloquea los clics hacia el menú o el 3D */
+    z-index: 5;
+    transition: opacity 0.5s ease;
+}
+
+.satelite-label {
+    position: absolute;
+    transform: translate(12px, -50%); /* Desplazado ligeramente a la derecha del punto 3D */
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    color: rgba(0, 243, 255, 0.85);
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* Pequeña línea conectora entre el punto 3D y el texto */
+.satelite-label::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 1px;
+    background: linear-gradient(90deg, #ff00ff, #00f3ff);
+    opacity: 0.75;
 }

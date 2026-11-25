@@ -1,25 +1,13 @@
-// ==========================================================================
-// CONFIGURACIÓN GLOBAL DEL MOTOR 3D Y VARIABLES DE CONTROL
-// ==========================================================================
 let scene, camara, renderer, particleSystem;
-
-// Variables de interacción del cursor (¡Restauradas!)
+// Variables de interacción del cursor 
 let mouseX = 0, mouseY = 0; 
 let targetX = 0, targetY = 0;
-
 // Variable global para conectar el volumen simulado de la voz con Three.js
 let volumenActual = 0;
-
-// Configuración dinámica de la Red Neuronal Viva
-let cadenasDeImpulsos = []; // Almacena los caminos dinámicos activos
-const maxCadenasSimultaneas = 5; // Cuántas cadenas independientes viajan a la vez
-const nodosPorCadena = 4; // Cuántos eslabones tiene cada cadena conectada
-
 // Configuración central de buffers
 const maxLineas = 1000; 
-
-// Referencias globales para renderizado de la red
-let redLineas, redDestellos, lineaMaterial, destelloMaterial;
+let nodosSatelite = [];
+let anillosOrbitales;
 
 // Dimensiones de pantalla dividida para centrar coordenadas
 const windowHalfX = window.innerWidth / 2;
@@ -38,6 +26,8 @@ function init() {
     renderer.setClearColor(0x000000, 0); 
 
     createBrainParticles();
+    crearAnillosOrbitales();
+    crearMicroNodosSatelite()
 
     // ESCUCHADORES DE EVENTOS DE INTERACTIVIDAD TOTAL
     window.addEventListener('resize', onWindowResize);
@@ -46,82 +36,65 @@ function init() {
     // Inicializar el sistema de síntesis de voz
     initVoiceSynthesis();
 
-    // --- CONSTRUCCIÓN GEOMÉTRICA DE LA RED NEURONAL VIVA ---
-    const lineaGeometry = new THREE.BufferGeometry();
-    const posicionesLineas = new Float32Array(maxLineas * 2 * 3); 
-    lineaGeometry.setAttribute('position', new THREE.BufferAttribute(posicionesLineas, 3));
-
-    lineaMaterial = new THREE.LineBasicMaterial({
-        color: 0x00f3ff,
-        transparent: true,
-        opacity: 0.4,
-        blending: THREE.AdditiveBlending
-    });
-    redLineas = new THREE.LineSegments(lineaGeometry, lineaMaterial);
-    scene.add(redLineas);
-
-    // Sistema de destellos brillantes en los puntos de anclaje
-    const destelloGeometry = new THREE.BufferGeometry();
-    const posicionesDestellos = new Float32Array(maxLineas * 3);
-    destelloGeometry.setAttribute('position', new THREE.BufferAttribute(posicionesDestellos, 3));
-
-    destelloMaterial = new THREE.PointsMaterial({
-        color: 0xffffff, // Blanco incandescente puro
-        size: 0.08,      // ¡Tamaño corregido! Escala sutil para que sea un microdestello elegante
-        transparent: true,
-        opacity: 0.9,    // Máxima fuerza visual
-        blending: THREE.AdditiveBlending, 
-        depthWrite: false
-    });
-
-    // Filtro matemático shader: Recorta las esquinas y los convierte en destellos circulares limpios
-    destelloMaterial.onBeforeCompile = function (shader) {
-        shader.fragmentShader = shader.fragmentShader.replace(
-            '#include <output_fragment>',
-            `
-            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
-            float r = dot(cxy, cxy);
-            if (r > 1.0) discard; // Elimina los bordes cuadrados gigantes
-            #include <output_fragment>
-            `
-        );
-    };
-    redDestellos = new THREE.Points(destelloGeometry, destelloMaterial);
-    scene.add(redDestellos);
+    // Restauración de memoria y efectos de texto
+    comprobarYRestaurarSesion();
+    inicializarEfectosTexto();
 
     animate();
 }
 
 
+
 function createBrainParticles() {
-    const particlesCount = 4000; // Alta densidad visual
+    const particlesCount = 4000;
     const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particlesCount * 3); 
-        
-    for (let i = 0; i < particlesCount * 3; i++) {
-        positions[i] = (Math.random() - 0.5) * 12; 
+    const positions = new Float32Array(particlesCount * 3);
+    const colors = new Float32Array(particlesCount * 3); // Nuevo arreglo para colores RGB individuales
+
+    const colorCentro = new THREE.Color(0x00f3ff); // Cian eléctrico en el núcleo
+    const colorBorde = new THREE.Color(0xff00ff);  // Magenta neón hacia el exterior
+
+    for (let i = 0; i < particlesCount; i++) {
+        const i3 = i * 3;
+        const x = (Math.random() - 0.5) * 12;
+        const y = (Math.random() - 0.5) * 12;
+        const z = (Math.random() - 0.5) * 12;
+
+        positions[i3] = x;
+        positions[i3 + 1] = y;
+        positions[i3 + 2] = z;
+
+        // Calculamos qué tan lejos está la partícula del centro (0,0,0) para mezclar los colores
+        const distancia = Math.sqrt(x * x + y * y + z * z);
+        const factorMezcla = Math.min(distancia / 7.5, 1); // Valor entre 0 (centro) y 1 (borde)
+
+        const colorFinal = colorCentro.clone().lerp(colorBorde, factorMezcla);
+
+        colors[i3] = colorFinal.r;
+        colors[i3 + 1] = colorFinal.g;
+        colors[i3 + 2] = colorFinal.b;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    // Material base con descarte de fragmentos nativo
     const material = new THREE.PointsMaterial({
-        color: 0x00f3ff,
-        size: 0.02, // Tamaño fino inicial
+        size: 0.03,
+        vertexColors: true, // ¡CLAVE! Le dice a Three.js que use el degradado individual
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.75,
         blending: THREE.AdditiveBlending,
         depthWrite: false
     });
 
-    // Filtro matemático para convertir cuadrados en círculos perfectos
+    // Mantenemos tu recorte matemático para conservar los puntos circulares limpios
     material.onBeforeCompile = function (shader) {
         shader.fragmentShader = shader.fragmentShader.replace(
             '#include <output_fragment>',
             `
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             float r = dot(cxy, cxy);
-            if (r > 1.0) discard; // Recorta los bordes rígidos del cuadrado
+            if (r > 1.0) discard;
             #include <output_fragment>
             `
         );
@@ -148,7 +121,7 @@ let espacioActual = 'core';
 
 // Función para crear o actualizar un salto aleatorio en la red
 function actualizarCadenasAleatorias(totalParticulas) {
-    // Si faltan cadenas vivas en la red, inicializamos una nueva con origen aleatorio
+    
     while (cadenasDeImpulsos.length < maxCadenasSimultaneas) {
         let origenAleatorio = Math.floor(Math.random() * totalParticulas);
         cadenasDeImpulsos.push([origenAleatorio]);
@@ -237,9 +210,7 @@ function renderizarRedViva() {
     // Vincular colores de las líneas a la transición de la sección actual
     lineaMaterial.color.copy(particleSystem.material.color);
     
-    // FIJADO: Comentamos la línea de copia para que destelloMaterial conserve su color blanco luminoso nativo
-    // destelloMaterial.color.copy(particleSystem.material.color);
-    
+      
     // Parpadeo sutil orgánico en los destellos para simular pulsos de luz de vida
     destelloMaterial.opacity = 0.7 + Math.sin(Date.now() * 0.02) * 0.3;
 }
@@ -251,81 +222,105 @@ function animate() {
     targetY += (mouseY - targetY) * 0.01;
 
     if (particleSystem) {
-        // Detectamos si el sistema está en cortocircuito (Rojo) por la transición
         const esFallo = particleSystem.material.color.getHex() === 0xff3333;
-        const multiplicadorVelocidad = esFallo ? 4 : 1;
+        const multiplicadorVelocidad = esFallo ? 2.5 : 1; // Cortocircuito más controlado y menos brusco
 
-        // --- 1. MOVIMIENTO ORGÁNICO INDEPENDIENTE DE CADA PARTÍCULA ---
+        // --- 1. FLOTACIÓN ORGÁNICA LENTA Y CONTEMPLATIVA ---
         const posiciones = particleSystem.geometry.attributes.position.array;
-        const tiempo = Date.now() * 0.0005; // Controla la suavidad del flujo flotante
+        const tiempo = Date.now() * 0.00012;
 
         for (let i = 0; i < posiciones.length; i += 3) {
-            // Cada partícula oscila sutilmente en sus ejes X e Y de forma asíncrona
-            posiciones[i]     += Math.sin(tiempo + i) * 0.001 * multiplicadorVelocidad;
-            posiciones[i + 1] += Math.cos(tiempo + i) * 0.001 * multiplicadorVelocidad;
+            posiciones[i]     += Math.sin(tiempo + i) * 0.00012 * multiplicadorVelocidad;
+            posiciones[i + 1] += Math.cos(tiempo + i) * 0.00012 * multiplicadorVelocidad;
         }
-        // Le indicamos a Three.js que actualice los vértices en este fotograma
         particleSystem.geometry.attributes.position.needsUpdate = true;
 
-        // --- 2. CONTROL ESTABLE DE TAMAÑO BASE (SUTIL Y FIJO) ---
+        // --- 2. TAMAÑO BASE ULTRA-FINO ---
         if (!esFallo && espacioActual !== 'analizar-operador') {
-            // Mantenemos un tamaño ultra-fino y constante para evitar el estiramiento cuadrado
             particleSystem.material.size = 0.02;
         }
 
-        // --- COMPORTAMIENTO SEGÚN EL ESPACIO INTERACTIVO ---
+        // --- 3. COMPORTAMIENTO PAUSADO SEGÚN EL ESPACIO INTERACTIVO ---
         if (espacioActual === 'core') {
-            particleSystem.rotation.y += 0.0001 * multiplicadorVelocidad;
-            particleSystem.rotation.x += 0.0002 * multiplicadorVelocidad;
+            particleSystem.rotation.y += 0.00003 * multiplicadorVelocidad;
+            particleSystem.rotation.x += 0.00005 * multiplicadorVelocidad;
             
-            particleSystem.rotation.y += targetX * 0.01;
-            particleSystem.rotation.x += targetY * 0.01;
+            // Seguimiento muy sutil al cursor
+            particleSystem.rotation.y += targetX * 0.0012;
+            particleSystem.rotation.x += targetY * 0.0012;
 
-            // Si hay un glitch/fallo en el core, hacemos una pequeña sacudida caótica de posición
             if (esFallo) {
-                particleSystem.position.x = (Math.random() - 0.5) * 0.1;
-                particleSystem.position.y = (Math.random() - 0.5) * 0.1;
+                particleSystem.position.x = (Math.random() - 0.5) * 0.003;
+                particleSystem.position.y = (Math.random() - 0.5) * 0.003;
             } else {
                 particleSystem.position.set(0, 0, 0);
             }
 
         } else if (espacioActual === 'sobre-mi') {
-            particleSystem.rotation.y += 0.002;
-            particleSystem.position.z = Math.sin(Date.now() * 0.001) * 0.5;
+            particleSystem.rotation.y += 0.0006;
+            particleSystem.position.z = Math.sin(Date.now() * 0.0004) * 0.35;
 
         } else if (espacioActual === 'proyectos') {
-            particleSystem.rotation.z += 0.002;
-            particleSystem.rotation.y += 0.001;
+            particleSystem.rotation.z += 0.0005;
+            particleSystem.rotation.y += 0.0004;
             
-            particleSystem.position.x = targetX * 0.5;
-            particleSystem.position.y = -targetY * 0.5;
+            particleSystem.position.x = targetX * 0.3;
+            particleSystem.position.y = -targetY * 0.3;
 
         } else if (espacioActual === 'stack') {
-            particleSystem.rotation.x = 1.5; 
-            particleSystem.position.y -= 0.01; 
-            
-            if (particleSystem.position.y < -2) {
-                particleSystem.position.y = 2;
-            }
+            // Flujo vertical continuo sin saltos bruscos de reinicio
+            particleSystem.rotation.x = 1.5;
+            particleSystem.rotation.y += 0.0005;
+            particleSystem.position.y = Math.sin(Date.now() * 0.0005) * 0.4;
+
         } else if (espacioActual === 'analizar-operador') {
-            // REACCIÓN 3D DE AUDIO: El motor responde al habla de la IA
-            particleSystem.rotation.y += (0.004 + volumenActual * 0.05) * multiplicadorVelocidad;
-            particleSystem.rotation.z += 0.001 * multiplicadorVelocidad;
+            // Reacción suave al volumen de la síntesis de voz
+            particleSystem.rotation.y += (0.0012 + volumenActual * 0.025) * multiplicadorVelocidad;
+            particleSystem.rotation.z += 0.0004 * multiplicadorVelocidad;
             
-            // Agitación caótica controlada basada en las frecuencias de audio
-            particleSystem.position.x = (Math.cos(Date.now() * 0.002) * 0.2) + (Math.random() - 0.5) * volumenActual * 0.1;
-            particleSystem.position.y = (Math.sin(Date.now() * 0.002) * 0.2) + (Math.random() - 0.5) * volumenActual * 0.1;
+            particleSystem.position.x = (Math.cos(Date.now() * 0.001) * 0.1) + (Math.random() - 0.5) * volumenActual * 0.04;
+            particleSystem.position.y = (Math.sin(Date.now() * 0.001) * 0.1) + (Math.random() - 0.5) * volumenActual * 0.04;
             
-            // Las partículas alteran su tamaño físicamente al ritmo del volumen
-            particleSystem.material.size = 0.04 + (volumenActual * 0.06);
+            particleSystem.material.size = 0.025 + (volumenActual * 0.04);
         }
     }
 
-    if (typeof renderizarRedViva === "function") {
-        renderizarRedViva();
+    // --- ROTACIÓN LENTA DE ANILLOS ORBITALES ---
+    if (anillosOrbitales) {
+        anillosOrbitales.children[0].rotation.z += 0.0009;
+        anillosOrbitales.children[1].rotation.z -= 0.0007;
+        anillosOrbitales.children[2].rotation.z += 0.0005;
     }
 
-    renderer.render(scene, camara); 
+    const contenedorHUD = document.getElementById('satelites-hud');
+if (contenedorHUD) {
+    // Ocultamos suavemente las etiquetas si el usuario entra a una sub-sección
+    contenedorHUD.style.opacity = (espacioActual === 'core') ? '1' : '0';
+}
+
+if (nodosSatelite.length > 0 && espacioActual === 'core') {
+    nodosSatelite.forEach(nodo => {
+        // Avanzamos su órbita circular lenta
+        nodo.angulo += nodo.velocidad;
+        nodo.mesh.position.x = Math.cos(nodo.angulo) * nodo.radio;
+        nodo.mesh.position.z = Math.sin(nodo.angulo) * nodo.radio;
+        nodo.mesh.position.y = nodo.yBase + Math.sin(nodo.angulo * 2) * 0.25;
+
+        // Proyectamos su posición 3D a coordenadas 2D de la pantalla
+        const vectorProyectado = nodo.mesh.position.clone().project(camara);
+        const x2D = (vectorProyectado.x * 0.5 + 0.5) * window.innerWidth;
+        const y2D = (-(vectorProyectado.y * 0.5) + 0.5) * window.innerHeight;
+
+        nodo.elemento.style.left = `${x2D}px`;
+        nodo.elemento.style.top = `${y2D}px`;
+
+        // Si el nodo pasa por detrás del núcleo (Z < 0), bajamos su opacidad para dar profundidad real
+        const estaAlFrente = nodo.mesh.position.z > 0;
+        nodo.elemento.style.opacity = estaAlFrente ? '0.9' : '0.25';
+    });
+}
+
+    renderer.render(scene, camara);
 }
 
 
@@ -380,11 +375,14 @@ function activarNodo(nombreNodo) {
         particleSystem.position.set(0, 0, 0);
         if(espacioActual !== 'stack' && espacioActual !== 'analizar-operador') particleSystem.rotation.set(0,0,0);
 
-        if (panelObjetivo) {
-            panelObjetivo.classList.add('active');
-            iniciarEfectoEscritura(panelObjetivo);
+        if (panelObjetivo) {        
+        panelObjetivo.classList.add('active');
+        const tituloNodo = panelObjetivo.querySelector('h2');
+        if (tituloNodo) activarDesencriptado(tituloNodo);
+        iniciarEfectoEscritura(panelObjetivo);
         }
     }, 400); 
+     guardarEstadoSistema(nombreNodo);
 }
 
 function regresarAlCore() {
@@ -409,8 +407,8 @@ function regresarAlCore() {
         bodyElement.classList.remove('sistema-fallo');
 
         if (particleSystem) {
-            particleSystem.material.color.setHex(0x00f3ff); 
-            particleSystem.material.size = 0.04;           
+            particleSystem.material.color.setHex(0xffffff); 
+            particleSystem.material.size = 0.03;           
             particleSystem.position.set(0, 0, 0); 
             particleSystem.rotation.set(0, 0, 0);
         }
@@ -421,6 +419,7 @@ function regresarAlCore() {
             coreMenu.style.pointerEvents = 'auto';
         }
     }, 300);
+    guardarEstadoSistema('core');
 }
 
 function iniciarEfectoEscritura(panel) {
@@ -525,3 +524,191 @@ speechSynthesis.onvoiceschanged = initVoiceSynthesis;
 window.onload = () => {
 init();
 };
+
+function guardarEstadoSistema(nodoActivo) {
+   
+    const sesionOperador = {
+        ultimoNodo: nodoActivo,
+        timestamp: Date.now()
+    };
+
+    localStorage.setItem('portafolio_session', JSON.stringify(sesionOperador));
+
+    console.log(`[MEMORIA] Estado guardado en localStorage: ${nodoActivo}`);
+}
+
+function comprobarYRestaurarSesion() {
+    // 1. Leemos el texto guardado en localStorage usando la misma clave exacta
+    const sesionGuardada = localStorage.getItem('portafolio_session');
+
+    // 2. Si no hay nada guardado aún (primera visita), salimos sin hacer nada
+    if (!sesionGuardada) return;
+
+    // 3. Usamos try/catch por seguridad: si el texto guardado está corrupto, la app no se rompe
+    try {
+        // Convertimos el texto plano de vuelta a un objeto de JavaScript
+        const datos = JSON.parse(sesionGuardada);
+
+        // 4. Si el último nodo guardado existe y NO es el menú central ('core'), lo abrimos
+        if (datos.ultimoNodo && datos.ultimoNodo !== 'core') {
+            console.log(`[MEMORIA] Restaurando última sesión en: ${datos.ultimoNodo}`);
+            
+            // Damos 400ms para que el motor 3D de Three.js termine de cargar antes de animar
+            setTimeout(() => {
+                activarNodo(datos.ultimoNodo);
+            }, 400);
+        }
+    } catch (error) {
+        console.error('[MEMORIA] Error al leer los datos guardados:', error);
+    }
+}
+
+
+// ==========================================================================
+// TAREA 1: EFECTO DE ESCANEO BIOMÉTRICO / DESENCRIPTADO EN TEXTOS
+// ==========================================================================
+const caracteresCyber = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*<>";
+
+function activarDesencriptado(elemento) {
+    if (!elemento) return;
+
+    // Guardamos el texto original la primera vez que se ejecuta
+    if (!elemento.dataset.textoOriginal) {
+        elemento.dataset.textoOriginal = elemento.innerText;
+    }
+
+    const textoReal = elemento.dataset.textoOriginal;
+    let iteracion = 0;
+
+    // Evita que se encimen animaciones si el cursor entra y sale rápido
+    clearInterval(elemento.intervaloTexto);
+
+    elemento.intervaloTexto = setInterval(() => {
+        elemento.innerText = textoReal
+            .split("")
+            .map((letra, indice) => {
+                if (indice < iteracion) {
+                    return textoReal[indice];
+                }
+                if (letra === " ") return " ";
+                return caracteresCyber[Math.floor(Math.random() * caracteresCyber.length)];
+            })
+            .join("");
+
+        if (iteracion >= textoReal.length) {
+            clearInterval(elemento.intervaloTexto);
+            elemento.innerText = textoReal; // Asegura el texto final limpio
+        }
+
+        iteracion += 1 / 2; // Velocidad fluida (~350ms)
+    }, 30);
+}
+
+// Conectar automáticamente el efecto hover a todos tus botones y enlaces clave
+function inicializarEfectosTexto() {
+    const selectores = '.hud-container button, .btn-back, .project-link';
+    document.querySelectorAll(selectores).forEach(boton => {
+        boton.addEventListener('mouseenter', () => activarDesencriptado(boton));
+    });
+}
+
+function crearAnillosOrbitales() {
+    anillosOrbitales = new THREE.Group();
+
+    // Función auxiliar para crear un anillo formado por una banda de partículas circulares
+    function generarAnilloParticulas(radio, grosor, cantidad, colorHex, tamano, opacidad) {
+        const geometria = new THREE.BufferGeometry();
+        const posiciones = new Float32Array(cantidad * 3);
+
+        for (let i = 0; i < cantidad; i++) {
+            const angulo = Math.random() * Math.PI * 2;
+            // Variación sutil en el radio para darle aspecto de banda de polvo/datos
+            const radioVariado = radio + (Math.random() - 0.5) * grosor;
+
+            posiciones[i * 3]     = Math.cos(angulo) * radioVariado;
+            posiciones[i * 3 + 1] = Math.sin(angulo) * radioVariado;
+            posiciones[i * 3 + 2] = (Math.random() - 0.5) * (grosor * 0.4); // Ligera profundidad Z
+        }
+
+        geometria.setAttribute('position', new THREE.BufferAttribute(posiciones, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: colorHex,
+            size: tamano,
+            transparent: true,
+            opacity: opacidad,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        // Recorte circular para que las partículas de los anillos sean puntos redondos limpios
+        material.onBeforeCompile = function (shader) {
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <output_fragment>',
+                `
+                vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+                float r = dot(cxy, cxy);
+                if (r > 1.0) discard;
+                #include <output_fragment>
+                `
+            );
+        };
+
+        return new THREE.Points(geometria, material);
+    }
+
+    // Anillo 1: Banda interna cian
+    const anillo1 = generarAnilloParticulas(2.4, 0.14, 260, 0x00f3ff, 0.024, 0.55);
+    anillo1.rotation.set(Math.PI / 3, Math.PI / 6, 0);
+
+    // Anillo 2: Banda media magenta en ángulo opuesto
+    const anillo2 = generarAnilloParticulas(3.1, 0.18, 340, 0xff00ff, 0.026, 0.45);
+    anillo2.rotation.set(-Math.PI / 4, Math.PI / 3, 0);
+
+    // Anillo 3: Banda exterior cian amplia (estilo anillo principal)
+    const anillo3 = generarAnilloParticulas(3.8, 0.25, 480, 0x00f3ff, 0.028, 0.6);
+    anillo3.rotation.set(Math.PI / 2.2, -Math.PI / 5, 0);
+
+    anillosOrbitales.add(anillo1, anillo2, anillo3);
+    scene.add(anillosOrbitales);
+}
+
+function crearMicroNodosSatelite() {
+    const contenedorHUD = document.getElementById('satelites-hud');
+    if (!contenedorHUD) return;
+
+    // Definimos 4 nodos con radios y velocidades distintas para que no choquen
+    const configuracionNodos = [
+        { etiqueta: 'JAVA_CORE', radio: 3.4, velocidad: 0.0018, angulo: 0.5,  yBase: 1.1,  color: 0x00f3ff },
+        { etiqueta: 'SYS_AI',    radio: 3.7, velocidad: 0.0014, angulo: 2.3,  yBase: -1.0, color: 0xff00ff },
+        { etiqueta: 'SQL_DB',    radio: 3.2, velocidad: 0.0020, angulo: 4.1,  yBase: 0.8,  color: 0x00f3ff },
+        { etiqueta: 'THREE_JS',  radio: 3.9, velocidad: 0.0012, angulo: 5.5,  yBase: -1.2, color: 0xff00ff }
+    ];
+
+    configuracionNodos.forEach(cfg => {
+        // 1. Creamos una micro-esfera luminosa en el espacio 3D
+        const geometria = new THREE.SphereGeometry(0.045, 16, 16);
+        const material = new THREE.MeshBasicMaterial({
+            color: cfg.color,
+            transparent: true,
+            opacity: 0.9
+        });
+        const mesh = new THREE.Mesh(geometria, material);
+        scene.add(mesh);
+
+        // 2. Creamos su etiqueta HTML vinculada
+        const divEtiqueta = document.createElement('div');
+        divEtiqueta.className = 'satelite-label';
+        divEtiqueta.innerText = cfg.etiqueta;
+        contenedorHUD.appendChild(divEtiqueta);
+
+        nodosSatelite.push({
+            mesh: mesh,
+            elemento: divEtiqueta,
+            radio: cfg.radio,
+            velocidad: cfg.velocidad,
+            angulo: cfg.angulo,
+            yBase: cfg.yBase
+        });
+    });
+}
